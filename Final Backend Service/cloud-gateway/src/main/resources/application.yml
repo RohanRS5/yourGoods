@@ -1,0 +1,54 @@
+server:
+  port: 9191
+
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    gateway:
+      routes:
+        - id: INVENTORY-SERVICE
+          uri: lb://INVENTORY-SERVICE
+          predicates:
+            - Path=/inventory/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: INVENTORY-SERVICE
+                fallbackuri: forward:/inventoryServiceFallBack
+        - id: RETAILER-SERVICE
+          uri: lb://RETAILER-SERVICE
+          predicates:
+            - Path=/api/retailer/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: RETAILER-SERVICE
+                fallbackuri: forward:/retailerServiceFallBack
+        - id: OWNER-SERVICE
+          uri: lb://OWNER-SERVICE
+          predicates:
+            - Path=/owner/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: OWNER-SERVICE
+                fallbackuri: forward:/ownerServiceFallBack
+
+
+
+hystrix:
+  command:
+    fallbackcmd:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 4000
+
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream,info, health
+
